@@ -1,5 +1,17 @@
 open System.IO
 
+let rec buildWindowsRec (measurements: int list) (windows: int list) =
+  match measurements with
+  | [] -> []
+  | m ->
+    m[0..2]
+    |> List.sum
+    |> fun w ->
+      buildWindowsRec m.Tail windows@[w]
+
+let buildWindows measurements =
+  buildWindowsRec measurements []
+
 let rec didItIncreaseRec (measurements: int list) previous (increases: int list) =
   match measurements with
   | [] -> []
@@ -19,5 +31,8 @@ let lines = File.ReadAllLines("input.txt")
 lines
 |> Array.toList
 |> List.map System.Int32.Parse
+|> buildWindows
+|> List.rev
 |> didItIncrease
-|> fun l -> printfn "It increased %i times" l.Length
+|> fun l ->
+  printfn "It increased %i times" l.Length
