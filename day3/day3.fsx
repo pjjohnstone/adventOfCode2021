@@ -31,7 +31,7 @@ let gammaRate ((ones: char list),(zeroes: char list)) =
 let epsilonRate ((ones: char list),(zeroes: char list)) =
   if ones.Length < zeroes.Length then '1' else '0'
 
-let stopPos = 4
+let stopPos = 11
 
 let (|Stop|Continue|) pos =
   if pos > stopPos then Stop else Continue
@@ -83,6 +83,14 @@ let getCo2Rating lines =
   co2Bits.Head
   |> Seq.toList
   |> convertToDecimal
+
+buildResult lines
+|> fun (gRate,eRate) ->
+  let gammaRate = convertToDecimal gRate
+  let epsilonRate = convertToDecimal eRate
+  printfn "Gamma rate is: %i" gammaRate
+  printfn "Epsilon rate is: %i" epsilonRate
+  printfn "Power consumption is: %i" (gammaRate * epsilonRate)
 
 let oxygenRating = getOxygenRating lines
 let co2Rating = getCo2Rating lines
