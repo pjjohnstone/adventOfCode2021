@@ -26,12 +26,12 @@ let countColumn (lines: string list) column =
     |> List.partition (fun d -> d = '1')
 
 let gammaRate ((ones: char list),(zeroes: char list)) =
-  if ones.Length > zeroes.Length then '1' else '0'
+  if ones.Length >= zeroes.Length then '1' else '0'
 
 let epsilonRate ((ones: char list),(zeroes: char list)) =
   if ones.Length < zeroes.Length then '1' else '0'
 
-let stopPos = 11
+let stopPos = 4
 
 let (|Stop|Continue|) pos =
   if pos > stopPos then Stop else Continue
@@ -53,10 +53,39 @@ let buildResult lines =
 let convertToDecimal (chars: char list) =
   System.Convert.ToInt32(System.String.Concat(Array.ofList(chars)), 2)
 
-buildResult lines
-|> fun (gRate,eRate) ->
-  let gammaRate = convertToDecimal gRate
-  let epsilonRate = convertToDecimal eRate
-  printfn "Gamma rate is: %i" gammaRate
-  printfn "Epsilon rate is: %i" epsilonRate
-  printfn "Power consumption is: %i" (gammaRate * epsilonRate)
+let mostCommonBit (lines: string list) pos =
+  countColumn lines pos
+  |> gammaRate
+
+let leastCommonBit (lines: string list) pos =
+  countColumn lines pos
+  |> epsilonRate
+
+let rec getLifeSupportRatingRec sorter (lines: string list) pos =
+  match lines with
+  | [] -> []
+  | _ ->
+    match lines.Length with
+    | 1 -> lines
+    | _ ->
+      lines
+      |> List.filter (fun l -> l[pos] = sorter lines pos)
+      |> fun newLines -> getLifeSupportRatingRec sorter newLines (pos + 1)
+
+let getOxygenRating lines =
+  let oxygenBits = getLifeSupportRatingRec mostCommonBit lines 0
+  oxygenBits.Head
+  |> Seq.toList
+  |> convertToDecimal
+
+let getCo2Rating lines =
+  let co2Bits = getLifeSupportRatingRec leastCommonBit lines 0
+  co2Bits.Head
+  |> Seq.toList
+  |> convertToDecimal
+
+let oxygenRating = getOxygenRating lines
+let co2Rating = getCo2Rating lines
+printfn "Oxygen generator rating is: %i" oxygenRating
+printfn "CO2 scrubber rating is: %i" co2Rating
+printfn "Life support rating is: %i" (oxygenRating * co2Rating)
