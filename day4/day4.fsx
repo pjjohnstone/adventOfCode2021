@@ -52,4 +52,77 @@ let rec getBoardsRec lines (boards: Board list) =
 let getBoards lines =
   getBoardsRec lines []
 
-getBoards example.Tail
+let isFullRow row =
+  if row.Spaces |> List.forall (fun s -> s.Called) then true else false
+
+let columnAsRow (board: Board) column =
+  board.Rows
+  |> List.map (fun c -> c.Spaces.[column])
+  |> fun r -> { Spaces = r }
+
+let rec columnsAsRowsRec inBoard column (outBoard: Board) =
+  match column with
+  | 5 -> outBoard
+  | _ ->
+    let newRow = columnAsRow inBoard column
+    columnsAsRowsRec inBoard (column + 1) ({ outBoard with Rows = outBoard.Rows@[newRow]})
+
+let columnsAsRows board =
+  columnsAsRowsRec board 0 { Rows = [] }
+
+let isWinningBoard board =
+  if
+    board.Rows |> List.exists isFullRow ||
+      board |> columnsAsRows |> fun b -> b.Rows |> List.exists isFullRow
+  then true
+  else false
+
+let callSpace space =
+  { space with Called = true }
+
+let numberCalled space number =
+  if space.Value = number then true else false
+
+let tryCallValueInRow row value =
+  row.Spaces
+  |> List.map (fun s -> if s.Value = value then callSpace s else s)
+  |> fun s -> { row with Spaces = s }
+
+let tryCallValueInBoard board value =
+  board.Rows
+  |> List.map (fun r -> tryCallValueInRow r value)
+  |> fun r -> { board with Rows = r }
+
+let callNumber boards number =
+  boards |> List.map (fun b -> tryCallValueInBoard b number)
+
+let rec callNumbersRec boards numbers lastNumber =
+  match numbers with
+  | [] -> (boards, lastNumber)
+  | _ ->
+    let winner = boards |> List.exists isWinningBoard
+    match winner with
+    | true -> (boards, lastNumber)
+    | false ->
+      let newBoards = callNumber boards numbers.Head
+      callNumbersRec newBoards numbers.Tail numbers.Head
+
+let calculateScore winningNumber board  =
+  let spaceValue =
+    board.Rows
+    |> List.map (fun r ->
+      r.Spaces
+      |> List.map (fun s -> if not s.Called then s.Value else 0)
+      |> List.sum)
+    |> List.sum
+  spaceValue * winningNumber
+
+let boards = getBoards lines.Tail
+
+callNumbersRec boards (numbers lines) 0
+|> fun (b,n) ->
+  b
+  |> List.filter isWinningBoard
+  |> List.exactlyOne
+  |> calculateScore n
+  |> printfn "The winning score was: %i"
