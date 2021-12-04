@@ -80,9 +80,6 @@ let isWinningBoard board =
 let callSpace space =
   { space with Called = true }
 
-let numberCalled space number =
-  if space.Value = number then true else false
-
 let tryCallValueInRow row value =
   row.Spaces
   |> List.map (fun s -> if s.Value = value then callSpace s else s)
