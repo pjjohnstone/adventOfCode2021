@@ -104,6 +104,18 @@ let rec callNumbersRec boards numbers lastNumber =
       let newBoards = callNumber boards numbers.Head
       callNumbersRec newBoards numbers.Tail numbers.Head
 
+let rec lastWinningBoard boards numbers lastNumber =
+  match numbers with
+  | [] -> (boards, lastNumber)
+  | _ ->
+    let allBoardsAreWinners = boards |> List.forall isWinningBoard
+    match allBoardsAreWinners with
+    | true -> (boards, lastNumber)
+    | _ ->
+      let reducedBoards = boards |> List.filter (fun b -> not (isWinningBoard b))
+      let newBoards = callNumber reducedBoards numbers.Head
+      lastWinningBoard newBoards numbers.Tail numbers.Head
+
 let calculateScore winningNumber board  =
   let spaceValue =
     board.Rows
@@ -123,3 +135,10 @@ callNumbersRec boards (numbers lines) 0
   |> List.exactlyOne
   |> calculateScore n
   |> printfn "The winning score was: %i"
+
+lastWinningBoard boards (numbers lines) 0
+|> fun (b,n) ->
+  b
+  |> List.exactlyOne
+  |> calculateScore n
+  |> printfn "The last winning board had a score of: %i"
