@@ -1,6 +1,7 @@
 open System.IO
 
 let example = File.ReadAllLines("example.txt") |> Array.toList
+let input = File.ReadAllLines("input.txt") |> Array.toList
 
 let coordinatesFromLine (line: string) =
   line.Split ' '
@@ -25,7 +26,7 @@ let straightLine points =
 let getLength points =
   let ((x1,y1),(x2,y2)) = points
   let result = if x1 = x2 then y1 - y2 else x1 - x2
-  if result < 0 then (result * -1) + 1 else result + 1
+  if result < 0 then (result * -1) else result + 1
 
 let drawLine length points = seq {
   let ((x1,y1),(x2,y2)) = points
@@ -37,10 +38,20 @@ let drawLine length points = seq {
   else
     if x2 > x1 then
       for i = x1 to length do yield (i,y1)
-    else for i = x2 to length do yield (i,y1)
+    else
+      for i = x2 to length do yield (i,y1)
 }
 
-let coordinates = List.map coordinatesFromLine example
+let countIntersects lines =
+  lines
+  |> List.map Seq.toList
+  |> List.concat
+  |> List.countBy (fun p -> p)
+  |> List.filter (fun (_,c) -> c > 1)
+  |> List.distinct
+  |> List.length
+
+let coordinates = List.map coordinatesFromLine input
 let straightLines = List.filter straightLine coordinates
 let drawnLines =
   straightLines
@@ -50,3 +61,4 @@ printfn "The coordinates are %A" coordinates
 printfn "The straight lines are: %A" straightLines
 for drawnLine in drawnLines do
   printfn "Drawn line was: %A" drawnLine
+printfn "Number of intersects is: %i" (countIntersects drawnLines)
