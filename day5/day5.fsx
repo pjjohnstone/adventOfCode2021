@@ -26,20 +26,21 @@ let straightLine points =
 let getLength points =
   let ((x1,y1),(x2,y2)) = points
   let result = if x1 = x2 then y1 - y2 else x1 - x2
-  if result < 0 then (result * -1) else result + 1
+  if result < 0 then (result * -1) else result
 
 let drawLine length points = seq {
   let ((x1,y1),(x2,y2)) = points
   if sameX points then
     if y2 > y1 then
-      for i = y1 to length do yield (x1,i)
+      for i = y1 to (y1 + length) do yield (x1,i)
     else
-      for i = y2 to length do yield (x1,i)
+      for i = y2 to (y2 + length) do yield (x1,i)
   else
     if x2 > x1 then
-      for i = x1 to length do yield (i,y1)
+      for i = x1 to (x1 + length) do
+        yield (i,y1)
     else
-      for i = x2 to length do yield (i,y1)
+      for i = x2 to (x2 + length) do yield (i,y1)
 }
 
 let countIntersects lines =
