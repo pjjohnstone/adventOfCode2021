@@ -23,10 +23,19 @@ let sameY points =
 let straightLine points =
   if sameX points || sameY points then true else false
 
+let getDistance (a,b) =
+  let length = a - b
+  if length < 0 then (length * -1) else length
+
+let diagonalLine points =
+  let ((x1,y1),(x2,y2)) = points
+  let xDistance = getDistance (x1,x2)
+  let yDistance = getDistance (y1,y2)
+  if xDistance = yDistance then true else false
+
 let getLength points =
   let ((x1,y1),(x2,y2)) = points
-  let result = if x1 = x2 then y1 - y2 else x1 - x2
-  if result < 0 then (result * -1) else result
+  if x1 = x2 then getDistance (y1,y2) else getDistance (x1,x2)
 
 let drawLine length points = seq {
   let ((x1,y1),(x2,y2)) = points
@@ -43,6 +52,24 @@ let drawLine length points = seq {
       for i = x2 to (x2 + length) do yield (i,y1)
 }
 
+let positiveTranslation x1 x2 =
+  if (x2 - x1) >= 0 then true else false
+
+let (|XposYpos|XposYneg|XnegYpos|XnegYneg|) ((x1,x2),(y1,y2)) =
+  if (positiveTranslation x1 x2) && (positiveTranslation y1 y2) then XposYpos
+  else if (positiveTranslation x1 x2) && not (positiveTranslation y1 y2) then XposYneg
+  else if not (positiveTranslation x1 x2) && (positiveTranslation y1 y2) then XnegYpos
+  else XnegYneg
+
+let drawDiagonalLine length points = seq {
+  let ((x1,y1),(_,_)) = points
+  match points with
+  | XposYpos -> for i = 0 to length do yield ((x1+i),(y1+i))
+  | XposYneg -> for i = 0 to length do yield ((x1+i),(y1-i))
+  | XnegYpos -> for i = 0 to length do yield ((x1-i),(y1+i))
+  | XnegYneg -> for i = 0 to length do yield ((x1-i),(y1-i))
+}
+
 let countIntersects lines =
   lines
   |> List.map Seq.toList
@@ -52,14 +79,27 @@ let countIntersects lines =
   |> List.distinct
   |> List.length
 
-let coordinates = List.map coordinatesFromLine input
+let coordinates = List.map coordinatesFromLine example
 let straightLines = List.filter straightLine coordinates
-let drawnLines =
+let diagonalLines = List.filter diagonalLine coordinates
+let drawnStraightLines =
   straightLines
   |> List.map (fun l -> drawLine (getLength l) l)
 
+let drawnDiagonalLines =
+  diagonalLines
+  |> List.map (fun d -> drawDiagonalLine (getLength d) d)
+
 printfn "The coordinates are %A" coordinates
 printfn "The straight lines are: %A" straightLines
-for drawnLine in drawnLines do
-  printfn "Drawn line was: %A" drawnLine
-printfn "Number of intersects is: %i" (countIntersects drawnLines)
+printfn "The diagonal lines are: %A" diagonalLines
+for drawnLine in drawnStraightLines do
+  printfn "Drawn straight line was: %A" drawnLine
+for drawnLine in drawnDiagonalLines do
+  printfn "Drawn diagonal line was: %A" drawnLine
+printfn "Number of intersects is: %i" (countIntersects (drawnStraightLines@drawnDiagonalLines))
+drawnDiagonalLines
+|> List.iter (fun s ->
+  s
+  |> Seq.iter (fun c ->
+    printfn "%A" c))
