@@ -21,17 +21,27 @@ let spawnFish fish = seq {
     if f.Age = 0 then yield { Age = 8; Number = f.Number }
 }
 
+let countFish fish =
+  fish
+  |> List.map (fun f -> f.Number)
+  |> List.sum
+
+let rec combineCohorts combined cohorts  =
+  match cohorts with
+  | [] -> combined
+  | _ ->
+    let (matches,notMatches) = cohorts |> List.partition (fun c -> c.Age = cohorts.Head.Age)
+    let collapsedMatches =
+      matches |> countFish |> fun n -> { Age = matches.Head.Age; Number = n }
+    combineCohorts (collapsedMatches::combined) notMatches
+
 let updateSchool fish =
   let newFish = spawnFish fish |> Seq.toList
   fish
   |> List.map (fun f -> if f.Age = 0 then { f with Age = 7 } else f)
   |> List.map (fun f -> { f with Age = (f.Age - 1)})
   |> List.append newFish
-
-let countFish fish =
-  fish
-  |> List.map (fun f -> f.Number)
-  |> List.sum
+  |> combineCohorts []
 
 let rec runSimulation fish (stopDay: int) day =
   match (day > stopDay) with
