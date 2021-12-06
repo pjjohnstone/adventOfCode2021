@@ -6,7 +6,7 @@ let maxDays = 256
 
 type Cohort = {
   Age: int;
-  Number: int;
+  Number: int64;
 }
 
 let getFish (string: string) =
