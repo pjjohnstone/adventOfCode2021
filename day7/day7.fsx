@@ -6,9 +6,19 @@ let input = File.ReadAllLines("input.txt") |> Array.exactlyOne
 let getCrabs (string: string) =
   string.Split ',' |> Array.toList |> List.map System.Int32.Parse
 
-let costToPosition position crab =
+let distanceToPosition position crab =
   let fuelCost = position - crab
   if fuelCost < 0 then (fuelCost * -1) else fuelCost
+
+let rec calculateCost distance rate cost =
+  match distance with
+  | 0 -> cost
+  | _ ->
+    calculateCost (distance - 1) (rate + 1) (cost + rate)
+
+let costToPosition position crab =
+  let distance = distanceToPosition position crab
+  calculateCost distance 1 0
 
 let totalCostToPosition position crabs =
   crabs |> List.map (fun c -> costToPosition c position) |> List.sum
