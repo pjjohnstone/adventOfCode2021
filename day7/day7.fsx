@@ -1,7 +1,7 @@
 open System.IO
 
 let example = "16,1,2,0,4,2,7,1,2,14"
-let input = File.ReadAllLines("input.txt") |> Array.exactlyOne
+let input = File.ReadAllText("input.txt")
 
 let getCrabs (string: string) =
   string.Split ',' |> Array.toList |> List.map System.Int32.Parse
