@@ -70,14 +70,6 @@ let rec containsAllElements list2 list1 =
       if not (List.contains h list1) then false
       else containsAllElements t list1
 
-let searchStringListForChars chars stringList =
-  stringList
-  |> List.find (fun s ->
-    s
-    |> Seq.toList
-    |> containsAllElements (Array.toList chars))
-  |> Seq.toArray
-
 let searchStringforChars chars string =
   string |> Seq.toList |> containsAllElements (Array.toList chars)
 
