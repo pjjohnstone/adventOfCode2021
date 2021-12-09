@@ -18,16 +18,9 @@ type DisplayMapping = {
   LowerRight: char
 }
 
-type Numbers = {
-  One: char[]
-  Two: char[]
-  Three: char[]
-  Four: char[]
-  Five: char[]
-  Six: char[]
-  Seven: char[]
-  Eight: char[]
-  Nine: char[]
+type Number = {
+  Code: string
+  Digit: int
 }
 
 let chopUpString (string: string) =
@@ -56,21 +49,16 @@ let knownOutput (output: string) =
   | _ -> false
 
 let getKnownNumbers (inputs: string list) =
-  let one = inputs |> List.find (fun s -> s.Length = 2) |> Seq.toArray
-  let seven = inputs |> List.find (fun s -> s.Length = 3) |> Seq.toArray
-  let four = inputs |> List.find (fun s -> s.Length = 4) |> Seq.toArray
-  let eight = inputs |> List.find (fun s -> s.Length = 7) |> Seq.toArray
-  {
-    One = one
-    Two = [|'x'|]
-    Three = [|'x'|]
-    Four = four
-    Five = [|'x'|]
-    Six = [|'x'|]
-    Seven = seven
-    Eight = eight
-    Nine = [|'x'|]
-  }
+  let one = inputs |> List.find (fun s -> s.Length = 2)
+  let seven = inputs |> List.find (fun s -> s.Length = 3)
+  let four = inputs |> List.find (fun s -> s.Length = 4)
+  let eight = inputs |> List.find (fun s -> s.Length = 7)
+  [
+    { Code = one; Digit = 1 }
+    { Code = seven; Digit = 7 }
+    { Code = four; Digit = 4 }
+    { Code = eight; Digit = 8 }
+  ]
 
 let rec containsAllElements list2 list1 =
   match list1 with
@@ -96,17 +84,11 @@ let searchStringforChars chars string =
 let resolveMappings one seven four eight (inputs: string list) =
   let top = seven |> Array.except one
   let upperLeftAndMiddle = four |> Array.except one
-  printfn "UpperLeftAndMiddle: %A" upperLeftAndMiddle
   let lowerLeftAndBottom = eight |> Array.except (Array.concat [four;top])
-  printfn "LowerLeftAndBottom: %A" lowerLeftAndBottom
   let zero = inputs |> List.find (fun i -> (i.Length = 6) && (searchStringforChars (Array.append seven lowerLeftAndBottom) i))
-  printfn "Zero: %A" zero
   let middle = upperLeftAndMiddle |> Array.except zero
-  printfn "Middle: %A" middle
   let upperLeft = upperLeftAndMiddle |> Array.except middle
-  printfn "UpperLeft: %A" upperLeft
   let three = inputs |> List.find (fun i -> (i.Length = 5) && (searchStringforChars (Array.append seven middle) i))
-  printfn "Three: %A" three
   let lowerLeft = lowerLeftAndBottom |> Array.except three
   let bottom = lowerLeftAndBottom |> Array.except lowerLeft
   let six = inputs |> List.find (fun i -> (i.Length = 6) && (searchStringforChars lowerLeft i))
@@ -123,17 +105,18 @@ let resolveMappings one seven four eight (inputs: string list) =
   }
 
 let mappingsToNumbers mappings =
-  {
-    One = [|mappings.UpperRight; mappings.LowerRight|]
-    Two = [|mappings.Top; mappings.UpperRight; mappings.Middle; mappings.LowerLeft; mappings.Bottom|]
-    Three = [|mappings.Top; mappings.UpperRight; mappings.Middle; mappings.LowerRight; mappings.Bottom|]
-    Four = [|mappings.UpperLeft; mappings.Middle; mappings.UpperRight; mappings.LowerRight|]
-    Five = [|mappings.Top; mappings.LowerRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom|]
-    Six = [|mappings.Top; mappings.LowerRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom; mappings.LowerLeft|]
-    Seven = [|mappings.Top; mappings.UpperRight; mappings.LowerRight|]
-    Eight = [|mappings.Top; mappings.LowerRight; mappings.UpperRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom; mappings.LowerLeft|]
-    Nine = [|mappings.Top; mappings.LowerRight; mappings.UpperRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom|]
-  }
+  [
+    { Code = [|mappings.Top; mappings.LowerRight; mappings.UpperRight; mappings.UpperLeft; mappings.Bottom; mappings.LowerLeft|] |> Array.sort |> System.String; Digit = 0 }
+    { Code = [|mappings.UpperRight; mappings.LowerRight|] |> Array.sort |> System.String; Digit = 1}
+    { Code = [|mappings.Top; mappings.UpperRight; mappings.Middle; mappings.LowerLeft; mappings.Bottom|] |> Array.sort |> System.String; Digit = 2 }
+    { Code = [|mappings.Top; mappings.UpperRight; mappings.Middle; mappings.LowerRight; mappings.Bottom|] |> Array.sort |> System.String; Digit = 3}
+    { Code = [|mappings.UpperLeft; mappings.Middle; mappings.UpperRight; mappings.LowerRight|] |> Array.sort |> System.String; Digit = 4}
+    { Code = [|mappings.Top; mappings.LowerRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom|] |> Array.sort |> System.String; Digit = 5}
+    { Code = [|mappings.Top; mappings.LowerRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom; mappings.LowerLeft|] |> Array.sort |> System.String; Digit = 6}
+    { Code = [|mappings.Top; mappings.UpperRight; mappings.LowerRight|] |> Array.sort |> System.String; Digit = 7}
+    { Code = [|mappings.Top; mappings.LowerRight; mappings.UpperRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom; mappings.LowerLeft|] |> Array.sort |> System.String; Digit = 8}
+    { Code = [|mappings.Top; mappings.LowerRight; mappings.UpperRight; mappings.Middle; mappings.UpperLeft; mappings.Bottom|] |> Array.sort |> System.String; Digit = 9}
+  ]
 
 let countKnownOutputs (patterns: SignalPattern list) =
   seq {
@@ -151,5 +134,10 @@ let io = getInputsAndOutputs shortExample |> List.exactlyOne
 
 let knownDigits = getKnownNumbers io.Inputs
 
-let mapped = resolveMappings knownDigits.One knownDigits.Seven knownDigits.Four knownDigits.Eight io.Inputs
+let one = knownDigits |> List.filter (fun n -> n.Digit = 1) |> List.exactlyOne |> fun n -> n.Code |> Seq.toArray
+let seven = knownDigits |> List.filter (fun n -> n.Digit = 7) |> List.exactlyOne |> fun n -> n.Code |> Seq.toArray
+let four = knownDigits |> List.filter (fun n -> n.Digit = 4) |> List.exactlyOne |> fun n -> n.Code |> Seq.toArray
+let eight = knownDigits |> List.filter (fun n -> n.Digit = 8) |> List.exactlyOne |> fun n -> n.Code |> Seq.toArray
+
+let mapped = resolveMappings  one seven four eight io.Inputs
 let code = mappingsToNumbers mapped
