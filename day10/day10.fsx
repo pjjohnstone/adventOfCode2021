@@ -1,6 +1,7 @@
 open System.IO
 
 let example = File.ReadAllLines("example.txt")
+let input = File.ReadAllLines("input.txt")
 
 type ChunkDelimiter =
   | Opening of char
@@ -86,4 +87,4 @@ let rec countScore total (parsedLines: NavLogLine list) =
         | _ -> 0
       countScore (total + points) parsedLines.Tail
 
-printfn "Penalty score: %i" (countScore 0 (parseNavigationLogLines example))
+printfn "Penalty score: %i" (countScore 0 (parseNavigationLogLines input))
