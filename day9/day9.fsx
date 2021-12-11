@@ -32,7 +32,20 @@ let isLowPoint y x grid =
   then true
   else false
 
+let getLowPoints (grid: int[,]) =
+  seq {
+    for y = 0 to Array2D.length1 grid - 1 do
+      for x = 0 to Array2D.length2 grid - 1 do
+        if isLowPoint y x grid then yield grid.[y,x]
+  }
+
+let getRiskRatings lowPoints =
+  lowPoints
+  |> Seq.map (fun p -> p + 1)
+  |> Seq.sum
+  |> printfn "Total risk level is: %i"
+
 let arrays = inputLinesToIntArrays example
 let grid = array2D arrays
-
-isLowPoint 4 0 grid
+let lowPoints = getLowPoints grid
+getRiskRatings lowPoints
