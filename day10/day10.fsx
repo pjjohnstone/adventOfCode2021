@@ -87,4 +87,61 @@ let rec countScore total (parsedLines: NavLogLine list) =
         | _ -> 0
       countScore (total + points) parsedLines.Tail
 
+let closingIsPair opening closing =
+  match opening with
+    | '(' ->
+      match closing with
+      | ')' -> Some(closing)
+      | _ -> None
+    | '[' ->
+      match closing with
+      | ']' -> Some(closing)
+      | _ -> None
+    | '{' ->
+      match closing with
+      | '}' -> Some(closing)
+      | _ -> None
+    | '<' ->
+      match closing with
+      | '>' -> Some(closing)
+      | _ -> None
+    | _ -> None
+
+let rec divideLineRec openings closings line =
+  match line with
+  | [] -> (openings, closings)
+  | head::_ ->
+    match head with
+    | OpeningChar(o) -> divideLineRec (o::openings) closings line.Tail
+    | ClosingChar(c) ->
+      match (closingIsPair openings.Head c) with
+      | Some(_) -> divideLineRec openings.Tail closings line.Tail
+      | None -> divideLineRec openings (c::closings) line.Tail
+    | InvalidChar(_) -> divideLineRec openings closings line.Tail
+
+let divideLine line =
+  divideLineRec [] [] line
+
+let isLineComplete line =
+  let (openings,closings) = divideLine line
+  openings.Length = closings.Length
+
+let rec completeLine (openings: char list) closings =
+  match openings with
+  | [] -> closings
+  | _ ->
+    match openings.Head with
+    | '(' -> completeLine openings.Tail (closings@[')'])
+    | '[' -> completeLine openings.Tail (closings@[']'])
+    | '{' -> completeLine openings.Tail (closings@['}'])
+    | '<' -> completeLine openings.Tail (closings@['>'])
+    | _ -> completeLine openings.Tail closings
+
+let completeNavLine (line: NavLogLine) =
+  let (Valid(chars,_)) = line
+  let charsList = chars |> Array.toList
+  let (openings,closings) = divideLine charsList
+  let ending = completeLine openings [] |> List.toArray
+  Valid((Array.append chars ending), 0)
+
 printfn "Penalty score: %i" (countScore 0 (parseNavigationLogLines input))
