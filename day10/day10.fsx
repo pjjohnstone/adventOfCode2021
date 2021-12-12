@@ -9,8 +9,8 @@ type ChunkDelimiter =
   | Invalid of char
 
 type NavLogLine =
-  | Valid of char[]
-  | Corrupt of char[]
+  | Valid of char[] * int
+  | Corrupt of char[] * int
 
 let (|OpeningChar|ClosingChar|InvalidChar|) char =
   match char with
@@ -48,19 +48,19 @@ let nextCharLegal lastOpening char =
       | _ -> Invalid(c)
   | InvalidChar(i) -> Invalid(i)
 
-let rec parseNavigationLine (openings: char list) (navLine: char array) =
-  let validNextChar = nextCharLegal openings.Head navLine.[0]
-  match (Array.length navLine) with
+let rec parseNavigationLine (openings: char list) index (navLine: char array) =
+  let validNextChar = nextCharLegal openings.Head navLine.[index]
+  match ((Array.length navLine) - index) with
   | 1 ->
     match validNextChar with
-    | Invalid(_) -> Corrupt(navLine)
-    | Closing(_) -> Valid(navLine)
-    | Opening(_) -> Corrupt(navLine)
+    | Invalid(_) -> Corrupt(navLine,index)
+    | Closing(_) -> Valid(navLine,index)
+    | Opening(_) -> Corrupt(navLine,index)
   | _ ->
     match validNextChar with
-    | Invalid(_) -> Corrupt(navLine)
-    | Closing(_) -> parseNavigationLine (openings.Tail) navLine.[1..]
-    | Opening(o) -> parseNavigationLine (o::openings) navLine.[1..]
+    | Invalid(_) -> Corrupt(navLine,index)
+    | Closing(_) -> parseNavigationLine (openings.Tail) (index + 1) navLine
+    | Opening(o) -> parseNavigationLine (o::openings) (index + 1) navLine
 
 let parseNavigationLogLines lines =
   lines
@@ -68,8 +68,8 @@ let parseNavigationLogLines lines =
   |> List.map (fun s -> Seq.toArray s)
   |> List.map (fun l ->
     match l.[0] with
-    | OpeningChar(o) -> parseNavigationLine [o] l
-    | _ -> Corrupt(l))
+    | OpeningChar(o) -> parseNavigationLine [o] 0 l
+    | _ -> Corrupt(l,0))
 
 let rec countScore total (parsedLines: NavLogLine list) =
   match parsedLines with
@@ -77,9 +77,9 @@ let rec countScore total (parsedLines: NavLogLine list) =
   | _ ->
     match parsedLines.Head with
     | Valid(_) -> countScore total parsedLines.Tail
-    | Corrupt(c) ->
+    | Corrupt(c,i) ->
       let points =
-        match c.[0] with
+        match c.[i] with
         | ')' -> 3
         | ']' -> 57
         | '}' -> 1197
