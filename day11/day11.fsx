@@ -32,16 +32,10 @@ let neighbours y x grid =
     tryFindIndexInGrid (y + 1) (x + 1) grid;
   ]
 
-// let charge grid =
-//   grid
-//   |> Array2D.map (fun v -> v + 1)
-
 let charge grid =
   for y = 0 to Array2D.length1 grid - 1 do
     for x = 0 to Array2D.length2 grid - 1 do
       Array2D.set grid y x (grid[y,x] + 1)
-
-let mutable flashes = 0
 
 let flash y x grid =
   neighbours y x grid
@@ -50,30 +44,42 @@ let flash y x grid =
     | None -> ()
     | Some (y2,x2) ->
       Array2D.set grid y2 x2 (grid.[y2,x2] + 1))
-  Array2D.set grid y x 0
 
-let rec step grid =
-  for y = 0 to Array2D.length1 grid - 1 do
-    for x = 0 to Array2D.length2 grid - 1 do
-      if grid.[y,x] > 8 then
+let zeroFlashers flashers grid =
+  flashers
+  |> List.iter (fun (y,x) -> Array2D.set grid y x 0)
+
+let rec step y x flashers grid =
+  match (y = Array2D.length1 grid) with
+  | true -> flashers
+  | false ->
+    match (x = Array2D.length2 grid) with
+    | true -> step (y + 1) 0 flashers grid
+    | false ->
+      match (grid.[y,x] > 8) with
+      | false -> step y (x + 1) flashers grid
+      | true ->
         flash y x grid
-        flashes <- flashes + 1
-        step grid
+        let newFlashers = (y,x)::flashers
+        step y (x + 1) newFlashers grid
 
-let rec countFlashesRec maxSteps currentStep grid =
+let startStepping grid =
+  step 0 0 [] grid
+
+let rec countFlashesRec maxSteps currentStep countFlashes grid =
   match ((maxSteps + 1) - currentStep) with
   | 0 -> ()
   | _ ->
-    printfn "Step %i" currentStep
-    printfn "%A" grid
-    printfn "Flashes: %i" flashes
-    step grid
+    let flashes = startStepping grid
     charge grid
-    countFlashesRec maxSteps (currentStep + 1) grid
+    zeroFlashers flashes grid
+    let totalFlashes = countFlashes + (flashes |> List.length)
+    printfn "After step %i:\n%A" currentStep grid
+    printfn "Flashes: %i" totalFlashes
+    countFlashesRec maxSteps (currentStep + 1) totalFlashes grid
 
 let countFlashes maxSteps grid =
-  countFlashesRec maxSteps 0 grid
+  countFlashesRec maxSteps 1 grid
 
 let grid = inputLinesToIntArrays example
-flashes <- 0
-countFlashes 10 grid
+countFlashes 3 0 grid
