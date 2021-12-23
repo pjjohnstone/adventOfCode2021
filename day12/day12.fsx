@@ -70,6 +70,9 @@ let rec findRoutesRec routes remainingNodes (nodes: Node list) =
 let findRoutes nodes =
   findRoutesRec [] nodes nodes
 
+let isConnected node other =
+  List.contains other.Name node.Connected
+
 nodesFromLines input
 |> findAllConnections input
 |> findRoutes
