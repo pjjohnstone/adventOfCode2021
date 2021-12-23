@@ -7,6 +7,11 @@ type Node = {
   Connected: string list
 }
 
+type Route = {
+  Start: Node;
+  End: Node;
+}
+
 let input = File.ReadAllLines("example1.txt")
 
 let isUpper (str : string) =
@@ -33,7 +38,7 @@ let nodesFromLines (lines: string[]) =
       Connected = [];
     })
 
-let findConnections (lines: string[]) node =
+let findConnections (lines: string[]) node nodes =
   lines
   |> Array.filter (fun l -> l.Contains(node.Name))
   |> Array.map (fun l -> l.Split('-'))
@@ -43,5 +48,29 @@ let findConnections (lines: string[]) node =
   |> Array.toList
   |> fun c -> { node with Connected = c }
 
-let nodes = nodesFromLines input
-let connectedNodes = nodes |> List.map (fun n -> findConnections input n)
+let findAllConnections lines nodes =
+  seq {
+    for node in nodes do yield findConnections lines node nodes
+  } |> Seq.toList
+
+let rec findRoutesRec routes remainingNodes (nodes: Node list) =
+  match remainingNodes with
+  | [] -> routes
+  | _ ->
+    let newRoutes =
+      seq {
+        for connection in remainingNodes.Head.Connected do
+        yield {
+          Start = remainingNodes.Head;
+          End = (nodes |> List.find (fun n -> n.Name = connection));
+        }
+      } |> Seq.toList
+    findRoutesRec (List.append routes newRoutes) remainingNodes.Tail nodes
+
+let findRoutes nodes =
+  findRoutesRec [] nodes nodes
+
+nodesFromLines input
+|> findAllConnections input
+|> findRoutes
+|> printfn "%A"
