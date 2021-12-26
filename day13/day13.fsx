@@ -28,7 +28,7 @@ let parseFoldInstruction line =
   |> Seq.toList
   |> List.splitAt 12
   |> fun (d,p) ->
-    { Axis = List.last d; Position = System.Char.GetNumericValue (List.last p) |> int }
+    { Axis = List.last d; Position = (List.skip 1 p) |> List.toArray |> System.String.Concat |> int }
 
 let getFolds lines =
   let index = lines |> Array.findIndex (fun l -> l = "")
