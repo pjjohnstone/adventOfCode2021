@@ -63,8 +63,6 @@ let countHoles coords =
 
 let coords = getCoords input
 let folds = getFolds input
-// drawPattern coords
 countHoles coords
 let newCoords = fold coords folds.Head
-// drawPattern newCoords
 countHoles newCoords
