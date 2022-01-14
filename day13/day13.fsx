@@ -1,7 +1,7 @@
 open System.IO
 
-let example = File.ReadAllLines("example.txt")
-let input = File.ReadAllLines("input.txt")
+let example = File.ReadAllLines(@"day13\example.txt")
+let input = File.ReadAllLines(@"day13\input.txt")
 
 type Coordinate = {
   X: int;
@@ -61,8 +61,11 @@ let drawPattern coords =
 let countHoles coords =
   coords |> List.distinct |> List.length |> printfn "There are %i holes"
 
+let allFolds folds coords =
+  folds |> List.map (fold coords)
+
 let coords = getCoords input
 let folds = getFolds input
 countHoles coords
-let newCoords = fold coords folds.Head
+let newCoords = allFolds folds coords
 countHoles newCoords
