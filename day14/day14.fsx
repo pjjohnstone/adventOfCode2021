@@ -1,6 +1,7 @@
 open System.IO
 
 let example = File.ReadAllLines(@"day14\example.txt")
+let input = File.ReadAllLines(@"day14\input.txt")
 
 let parseInput lines =
   let index = Array.findIndex (fun l -> l = "") lines
@@ -18,10 +19,6 @@ let polymerInsert rules pair =
   let (left,right) = pair
   let pairString = $"%c{left}%c{right}"
   let insert = rules |> List.find (fun (p,_) -> p = pairString) |> fun (_,i) -> i
-  printfn "Left: %c Right: %c" left right
-  printfn "String version: %s" pairString
-  printfn "Inserting: %c" insert
-  printfn $"%c{left}%c{insert}"
   $"%c{left}%c{insert}"
 
 let step rules polymer =
@@ -31,8 +28,23 @@ let step rules polymer =
   |> String.concat ""
   |> fun s -> $"%s{s}%c{(List.last polymer)}"
 
-let (polymer,rules) = parseInput example
-let ruleTuples = rulesToTuples rules
-let pairs = polymer |> List.pairwise
-let step1 = step ruleTuples polymer
-let step2 = step ruleTuples (step1 |> Seq.toList)
+let rec stepsRec rules maxCount polymer count =
+  match (count > maxCount) with
+  | true -> polymer
+  | false ->
+    let newPolymer = step rules polymer
+    printfn "After step %i: %s" count newPolymer
+    stepsRec rules maxCount (newPolymer |> Seq.toList) (count + 1)
+
+let steps rules maxCount polymer =
+  stepsRec rules maxCount polymer 1
+
+let scorePolymer polymer =
+  let counts = polymer |> List.countBy id
+  let highestFreq = counts |> List.map (fun (_,c) -> c) |> List.max
+  let lowestFreq = counts |> List.map (fun (_,c) -> c) |> List.min
+  printfn "polymer value is: %i" (highestFreq - lowestFreq)
+
+let (polymer,ruleStrings) = parseInput input
+let rules = rulesToTuples ruleStrings
+steps rules 10 polymer |> scorePolymer
