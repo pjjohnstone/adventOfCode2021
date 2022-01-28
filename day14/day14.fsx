@@ -21,22 +21,21 @@ let polymerInsert rules pair =
   let insert = rules |> List.find (fun (p,_) -> p = pairString) |> fun (_,i) -> i
   $"%c{left}%c{insert}"
 
-let step rules polymer =
+let step rules (polymer: char seq) =
   polymer
-  |> List.pairwise
-  |> List.map (fun pair -> polymerInsert rules pair)
+  |> Seq.pairwise
+  |> Seq.map (fun pair -> polymerInsert rules pair)
   |> String.concat ""
-  |> fun s -> $"%s{s}%c{(List.last polymer)}"
+  |> fun s -> $"%s{s}%c{(Seq.last polymer)}"
 
-let rec stepsRec rules maxCount polymer count =
+let rec stepsRec rules maxCount (polymer: char seq) count =
   match (count > maxCount) with
   | true -> polymer
   | false ->
-    let newPolymer = step rules polymer
-    printfn "After step %i: %s" count newPolymer
-    stepsRec rules maxCount (newPolymer |> Seq.toList) (count + 1)
+    printfn "After step %i: %i" count (Seq.length polymer)
+    stepsRec rules maxCount (step rules polymer) (count + 1)
 
-let steps rules maxCount polymer =
+let steps rules maxCount (polymer: char seq) =
   stepsRec rules maxCount polymer 1
 
 let scorePolymer polymer =
@@ -47,4 +46,4 @@ let scorePolymer polymer =
 
 let (polymer,ruleStrings) = parseInput input
 let rules = rulesToTuples ruleStrings
-steps rules 10 polymer |> scorePolymer
+steps rules 40 polymer |> Seq.toList |> scorePolymer
