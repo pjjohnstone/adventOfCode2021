@@ -1,7 +1,8 @@
 open System.IO
+open System.Collections.Generic
 
-let example = File.ReadAllLines(@"day14\example.txt")
-let input = File.ReadAllLines(@"day14\input.txt")
+let example = File.ReadAllLines(@"example.txt")
+let input = File.ReadAllLines(@"input.txt")
 
 let parseInput lines =
   let index = Array.findIndex (fun l -> l = "") lines
@@ -15,35 +16,44 @@ let rulesToTuples rules =
   rules
   |> List.map ruleToTuple
 
-let polymerInsert rules pair =
-  let (left,right) = pair
+let newElement (rules: list<string * char>) left right =
   let pairString = $"%c{left}%c{right}"
-  let insert = rules |> List.find (fun (p,_) -> p = pairString) |> fun (_,i) -> i
-  $"%c{left}%c{insert}"
+  rules |> List.find (fun (p,_) -> p = pairString) |> fun (_,i) -> i
 
-let step rules (polymer: char seq) =
+let mutable counts = new Dictionary<char, int>()
+
+let incrementKey key =
+  match counts.ContainsKey key with
+  | true -> counts[key] <- counts[key] + 1
+  | false -> counts.Add(key, 1)
+
+let rec expand rules left right depth =
+  match (depth = 0) with
+  | true -> incrementKey left
+  | false ->
+    expand rules left (newElement rules left right) (depth - 1)
+    expand rules (newElement rules left right) right (depth - 1)
+
+let expandPolymer rules polymer depth =
   polymer
   |> Seq.pairwise
-  |> Seq.map (fun pair -> polymerInsert rules pair)
-  |> String.concat ""
-  |> fun s -> $"%s{s}%c{(Seq.last polymer)}"
+  |> Seq.iter (fun (l,r) -> expand rules l r depth)
 
-let rec stepsRec rules maxCount (polymer: char seq) count =
-  match (count > maxCount) with
-  | true -> polymer
-  | false ->
-    printfn "After step %i: %i" count (Seq.length polymer)
-    stepsRec rules maxCount (step rules polymer) (count + 1)
+let inline toMap kvps =
+    kvps
+    |> Seq.map (|KeyValue|)
+    |> Map.ofSeq
 
-let steps rules maxCount (polymer: char seq) =
-  stepsRec rules maxCount polymer 1
+let summarizeCounts (counts: Dictionary<char,int>) =
+  toMap counts
+  |> Map.toList
+  |> List.map (fun (_,c) -> c)
+  |> fun l -> printfn "polymer value is: %i" (List.max l - List.min l)
 
-let scorePolymer polymer =
-  let counts = polymer |> List.countBy id
-  let highestFreq = counts |> List.map (fun (_,c) -> c) |> List.max
-  let lowestFreq = counts |> List.map (fun (_,c) -> c) |> List.min
-  printfn "polymer value is: %i" (highestFreq - lowestFreq)
-
-let (polymer,ruleStrings) = parseInput input
+let (polymer,ruleStrings) = parseInput example
 let rules = rulesToTuples ruleStrings
-steps rules 40 polymer |> Seq.toList |> scorePolymer
+
+expandPolymer rules polymer 10
+incrementKey (List.last polymer)
+printfn "%A" counts
+summarizeCounts counts
