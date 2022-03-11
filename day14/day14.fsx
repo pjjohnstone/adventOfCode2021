@@ -28,7 +28,6 @@ let incrementKey key =
   | false -> counts.Add(key, 1)
 
 let rec expand rules left right depth =
-  printfn "Depth: %i Left: %c Right: %c" depth left right
   match (depth = 0) with
   | true -> incrementKey left
   | false ->
