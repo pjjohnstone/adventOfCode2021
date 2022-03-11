@@ -28,6 +28,7 @@ let incrementKey key =
   | false -> counts.Add(key, 1)
 
 let rec expand rules left right depth =
+  printfn "Depth: %i Left: %c Right: %c" depth left right
   match (depth = 0) with
   | true -> incrementKey left
   | false ->
@@ -50,10 +51,12 @@ let summarizeCounts (counts: Dictionary<char,int>) =
   |> List.map (fun (_,c) -> c)
   |> fun l -> printfn "polymer value is: %i" (List.max l - List.min l)
 
-let (polymer,ruleStrings) = parseInput example
+let (polymer,ruleStrings) = parseInput input
 let rules = rulesToTuples ruleStrings
 
+#time
 expandPolymer rules polymer 10
 incrementKey (List.last polymer)
 printfn "%A" counts
 summarizeCounts counts
+#time
